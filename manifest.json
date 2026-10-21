@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Media Lens",
+  "version": "2.2.0",
+  "minimum_chrome_version": "116",
+  "description": "Save videos and images, or choose several videos from a channel page to download together.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "nativeMessaging",
+    "storage"
+  ],
+  "action": {
+    "default_title": "Media Lens — videos and images",
+    "default_icon": {
+      "16": "icons/lens-16.png",
+      "32": "icons/lens-32.png",
+      "48": "icons/lens-48.png",
+      "128": "icons/lens-128.png"
+    },
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "icons/lens-16.png",
+    "32": "icons/lens-32.png",
+    "48": "icons/lens-48.png",
+    "128": "icons/lens-128.png"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'"
+  }
+}

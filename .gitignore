@@ -1,0 +1,11 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.part
+*.ytdl
+.gradle/
+**/build/
+android/local.properties
+*.jks
+*.keystore
+.env*

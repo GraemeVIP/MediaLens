@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Media Lens</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="top">
+    <img class="logo" src="icons/lens-48.png" width="30" height="30" alt="">
+    <div class="where"><strong>Media Lens</strong><span id="site">This page</span></div>
+    <button id="rescan" class="icon-button" type="button" title="Scan this page again" aria-label="Scan this page again">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+    </button>
+    <button id="open-settings" class="icon-button" type="button" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Media on this page">
+    <button role="tab" id="tab-videos" data-panel="videos" aria-selected="true" aria-controls="panel-videos">Videos<span class="count" id="count-videos"></span></button>
+    <button role="tab" id="tab-images" data-panel="images" aria-selected="false" aria-controls="panel-images">Images<span class="count" id="count-images"></span></button>
+    <button role="tab" id="tab-downloads" data-panel="downloads" aria-selected="false" aria-controls="panel-downloads">Downloads<span class="count live" id="count-downloads"></span></button>
+  </nav>
+
+  <main>
+    <section id="panel-videos" class="panel" role="tabpanel" aria-labelledby="tab-videos">
+      <div id="linked-videos"></div>
+      <div id="single-videos"></div>
+    </section>
+
+    <section id="panel-images" class="panel" role="tabpanel" aria-labelledby="tab-images" hidden>
+      <div class="toolbar">
+        <label class="switch"><input type="checkbox" id="hide-small" checked><span class="track" aria-hidden="true"></span>Hide small</label>
+        <button id="select-all" class="text-button" type="button">Select all</button>
+      </div>
+      <div id="image-grid" class="grid"></div>
+      <div id="images-state"></div>
+    </section>
+
+    <section id="panel-downloads" class="panel" role="tabpanel" aria-labelledby="tab-downloads" hidden>
+      <div id="job-list" class="jobs"></div>
+      <div class="panel-foot">
+        <button id="open-folder" class="text-button" type="button">Open Media Lens folder</button>
+        <button id="clear-finished" class="text-button" type="button">Clear finished</button>
+      </div>
+    </section>
+
+    <section id="panel-settings" class="panel settings" hidden>
+      <button id="close-settings" class="back" type="button">‹ Back</button>
+      <h2>Settings</h2>
+      <label class="setting">
+        <span><strong>Use my browser sign-ins</strong><small>Needed for premium, members-only and age-checked videos. macOS may ask once for Keychain access.</small></span>
+        <span class="switch"><input type="checkbox" id="use-cookies"><span class="track" aria-hidden="true"></span></span>
+      </label>
+      <label class="setting batch-options">
+        <span><strong>Read sign-ins from</strong><small>Choose the browser where you are signed in.</small></span>
+        <select id="cookie-browser" aria-label="Browser for sign-ins"><option value="brave">Brave</option><option value="chrome">Chrome</option></select>
+      </label>
+      <div class="setting">
+        <span><strong>Video engine</strong><small id="engine-info">Checking…</small></span>
+        <button id="update-engine" class="secondary" type="button">Update</button>
+      </div>
+      <div class="setting">
+        <span><strong>Save location</strong><small>Downloads › Media Lens</small></span>
+        <button id="settings-folder" class="secondary" type="button">Open</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="video-bar" class="actionbar" hidden>
+    <span id="selected-videos-label">Tick videos to select</span>
+    <button id="save-videos" class="primary" type="button" disabled>Download</button>
+  </div>
+  <div id="image-bar" class="actionbar" hidden>
+    <span id="selected-label">Nothing selected</span>
+    <button id="save-images" class="primary" type="button" disabled>Download</button>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="shared.js"></script>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

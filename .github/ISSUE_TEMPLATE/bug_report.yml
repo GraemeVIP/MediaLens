@@ -1,0 +1,68 @@
+name: Bug report
+description: Report a reproducible problem with Media Lens.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please remove private cookies, tokens and signed or private URLs before posting. Share only public, sanitised details.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Brave / Chrome on macOS
+        - Android
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Media Lens version
+      description: Enter the extension version or Android beta build.
+      placeholder: 2.2.0 or Android beta build
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest set of steps that shows the problem.
+      placeholder: |
+        1. Open …
+        2. Click …
+        3. Observe …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitised log (optional)
+      description: Paste only redacted log lines. Do not include private cookies, tokens or signed/private URLs.
+      render: text
+
+  - type: input
+    id: public-url
+    attributes:
+      label: Public reproducible URL (optional)
+      description: Share only a public URL that is safe to disclose; never paste a private or tokenised URL.

@@ -1,0 +1,15 @@
+import {readFile,access} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+const root=new URL('../',import.meta.url),manifest=JSON.parse(await readFile(new URL('manifest.json',root)));
+if(manifest.manifest_version!==3||manifest.action.default_popup!=='popup.html')throw new Error('Toolbar popup missing');
+const background=await readFile(new URL('background.js',root),'utf8');
+if(/tabs\.create|action\.onClicked|webRequest/.test(background))throw new Error('Unexpected tab-opening or page-wide collection flow');
+for(const file of ['background.js','popup.js','shared.js','scan.js'])execFileSync(process.execPath,['--check',fileURLToPath(new URL(file,root))]);
+for(const file of ['popup.html','popup.css',...Object.values(manifest.icons)])await access(new URL(file,root));
+const css=await readFile(new URL('popup.css',root),'utf8');for(const[,n]of css.matchAll(/font-size:\s*(\d+)px/g))if(Number(n)<15)throw new Error('Text below 15px');
+if(manifest.host_permissions||manifest.permissions.includes('webRequest'))throw new Error('Unnecessary broad access');
+if(!manifest.permissions.includes('storage'))throw new Error('Storage permission missing');
+const pkg=JSON.parse(await readFile(new URL('package.json',root)));
+if(pkg.version!==manifest.version)throw new Error('Release versions differ');
+console.log('Popup, scanner, assets, syntax, readable text sizes and scoped permissions verified.');

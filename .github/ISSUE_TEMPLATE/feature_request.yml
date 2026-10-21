@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest a focused improvement for Media Lens.
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: request
+    attributes:
+      label: What would you like?
+      description: Describe the proposed feature in a few sentences.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: What would it help you do?
+      description: Give a short example of the use case or workflow.
+    validations:
+      required: true
