@@ -4,7 +4,7 @@ A standalone native downloader: **paste a link or Share → Media Lens**, find t
 
 - Best video with audio, maximum-resolution choices and M4A audio extraction.
 - Direct PNG, JPEG, WebP, GIF and other image links.
-- Background foreground-service downloads with progress, cancellation and retry.
+- Background downloads with file sizes, estimated stream totals, live Mbps speed, time remaining, cancellation and retry.
 - Completed files in **Downloads / Media Lens**, accessible in your usual Files app.
 - Private on-device history; no account, analytics or broad storage permission.
 
@@ -19,6 +19,8 @@ The app is available as source for local builds. A signed private beta has been 
 The FFmpeg dependency has a [known upstream 16 KB-page issue](https://github.com/yausername/youtubedl-android/issues/365). Video operations detect affected devices and report the limitation instead of starting the incompatible runtime. This beta is not a Google Play release. Site support follows yt-dlp; login/age-gated, private and DRM content may be unavailable. Android does not import your desktop browser's cookies.
 
 Use **Settings → Update engine** before trying sites that have changed since the bundled engine was built. Updates come directly from the official yt-dlp stable release.
+
+Stream downloads use eight parallel fragment connections. A DNS fallback handles failed xHamster CDN lookups without changing the phone's VPN or DNS settings; see [privacy details](../docs/PRIVACY.md).
 
 ## Build
 

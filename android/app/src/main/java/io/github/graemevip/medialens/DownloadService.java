@@ -87,7 +87,7 @@ public class DownloadService extends Service {
   }
 
   private Notification notification(String text, String id, int progress) {
-    Intent open = new Intent(this, MainActivity.class);
+    Intent open = new Intent(this, MainActivity.class).putExtra("screen", "library");
     PendingIntent pi =
         PendingIntent.getActivity(
             this, 0, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -119,7 +119,11 @@ public class DownloadService extends Service {
     Jobs.put(j, "progress", Math.max(0, Math.min(99, (int) value)));
     Jobs.put(j, "detail", text);
     Jobs.save(this, j);
-    manager.notify(NOTICE, notification(text, j.optString("id"), (int) value));
+    String summary = j.optString("transfer").replace('\n', ' ');
+    manager.notify(
+        NOTICE,
+        notification(
+            text + (summary.isEmpty() ? "" : " · " + summary), j.optString("id"), (int) value));
   }
 
   private void download(JSONObject j) {
@@ -131,6 +135,8 @@ public class DownloadService extends Service {
       Jobs.put(j, "status", "downloading");
       Jobs.put(j, "error", "");
       Jobs.put(j, "progress", 0);
+      Jobs.put(j, "detail", "Connecting…");
+      Jobs.put(j, "transfer", "");
       Jobs.save(this, j);
       if (!folder.mkdirs() && !folder.isDirectory())
         throw new IOException("Cannot create download folder.");
@@ -139,41 +145,27 @@ public class DownloadService extends Service {
       else {
         Engine.init(this);
         check(id);
-        YoutubeDLRequest q = Engine.request(url);
-        String quality = j.optString("quality", "best");
-        q.addOption("--newline");
-        q.addOption("--no-part");
-        q.addOption("--restrict-filenames");
-        q.addOption("-o", new File(folder, "%(title).120B [%(id)s].%(ext)s").getAbsolutePath());
-        if ("audio".equals(quality)) {
-          q.addOption("-f", "bestaudio/best");
-          q.addOption("-x");
-          q.addOption("--audio-format", "m4a");
-        } else {
-          String filter =
-              "best".equals(quality) ? "" : "[height<=" + Integer.parseInt(quality) + "]";
-          q.addOption("-f", "bv*" + filter + "+ba/b" + filter);
-          q.addOption("--merge-output-format", "mp4/mkv");
+        try {
+          downloadVideo(url, folder, j, false);
+        } catch (Exception first) {
+          check(id);
+          if (!Engine.connectionFailure(first)) throw first;
+          Engine.delete(folder);
+          if (!folder.mkdirs()) throw new IOException("Cannot prepare an alternate download.");
+          Jobs.put(j, "transfer", "");
+          progress(j, 0, "Trying an alternate stream…");
+          try {
+            downloadVideo(url, folder, j, true);
+          } catch (Exception alternate) {
+            check(id);
+            throw new IOException(
+                "Stream failed: "
+                    + Engine.friendly(first)
+                    + "\n\nAlternate stream: "
+                    + Engine.friendly(alternate),
+                alternate);
+          }
         }
-        long[] last = {0};
-        YoutubeDL.getInstance()
-            .execute(
-                q,
-                id,
-                (percent, eta, line) -> {
-                  if (cancelled.contains(id)) YoutubeDL.getInstance().destroyProcessById(id);
-                  long now = System.currentTimeMillis();
-                  if (now - last[0] > 600) {
-                    last[0] = now;
-                    progress(
-                        j,
-                        percent,
-                        percent >= 99
-                            ? "Finishing media…"
-                            : "Downloading · " + Math.max(0, (int) (float) percent) + "%");
-                  }
-                  return kotlin.Unit.INSTANCE;
-                });
       }
       check(id);
       File[] files =
@@ -186,6 +178,8 @@ public class DownloadService extends Service {
       if (files == null || files.length != 1 || files[0].length() == 0)
         throw new IOException("The engine did not produce one complete media file.");
       File file = files[0];
+      Jobs.put(j, "size", file.length());
+      Jobs.put(j, "transfer", Transfer.size(file.length()));
       progress(j, 99, "Saving to Downloads…");
       String extension =
           file.getName().contains(".")
@@ -236,6 +230,52 @@ public class DownloadService extends Service {
     }
   }
 
+  private void downloadVideo(String url, File folder, JSONObject j, boolean direct)
+      throws Exception {
+    String id = j.optString("id"), quality = j.optString("quality", "best");
+    YoutubeDLRequest q = Engine.request(url);
+    q.addOption("--newline");
+    q.addOption("--concurrent-fragments", 8);
+    q.addOption("--progress-template", Transfer.TEMPLATE);
+    q.addOption("--progress-delta", 0.3);
+    q.addOption("--no-part");
+    q.addOption("--restrict-filenames");
+    q.addOption("-o", new File(folder, "%(title).120B [%(id)s].%(ext)s").getAbsolutePath());
+    q.addOption("-f", Engine.format(quality, direct));
+    if ("audio".equals(quality)) {
+      q.addOption("-x");
+      q.addOption("--audio-format", "m4a");
+    } else q.addOption("--merge-output-format", "mp4/mkv");
+    long[] last = {0};
+    Transfer transfer = new Transfer();
+    YoutubeDL.getInstance()
+        .execute(
+            q,
+            id,
+            (percent, eta, line) -> {
+              if (cancelled.contains(id)) YoutubeDL.getInstance().destroyProcessById(id);
+              boolean updated = transfer.read(line);
+              long now = System.currentTimeMillis();
+              if (updated && now - last[0] > 600) {
+                last[0] = now;
+                Jobs.put(j, "downloaded", transfer.downloaded);
+                Jobs.put(j, "total", transfer.total);
+                Jobs.put(j, "estimated", transfer.estimated);
+                Jobs.put(j, "speed", transfer.bytesPerSecond);
+                Jobs.put(j, "transfer", transfer.summary());
+                progress(
+                    j,
+                    transfer.percent(),
+                    transfer.total > 0
+                        ? "Downloading · " + transfer.percent() + "%"
+                        : "Downloading…");
+              } else if (!updated && line.contains("[Merger]")) {
+                progress(j, 99, "Finishing media…");
+              }
+              return kotlin.Unit.INSTANCE;
+            });
+  }
+
   private void downloadImage(String url, File dir, JSONObject j) throws Exception {
     String id = j.optString("id");
     HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
@@ -253,6 +293,7 @@ public class DownloadService extends Service {
       if (extension == null) extension = "img";
       File file = new File(dir, "Media-Lens-" + System.currentTimeMillis() + "." + extension);
       long size = conn.getContentLengthLong(), count = 0, last = 0;
+      long started = android.os.SystemClock.elapsedRealtime();
       try (InputStream in = conn.getInputStream();
           OutputStream out = new FileOutputStream(file)) {
         byte[] b = new byte[65536];
@@ -264,6 +305,17 @@ public class DownloadService extends Service {
           long now = System.currentTimeMillis();
           if (now - last > 600) {
             last = now;
+            double rate =
+                count * 1000d / Math.max(1, android.os.SystemClock.elapsedRealtime() - started);
+            Jobs.put(j, "downloaded", count);
+            Jobs.put(j, "total", Math.max(0, size));
+            Jobs.put(
+                j,
+                "transfer",
+                Transfer.size(count)
+                    + (size > 0 ? " / " + Transfer.size(size) : " downloaded")
+                    + "\n"
+                    + Transfer.speed(rate));
             progress(j, size > 0 ? 100f * count / size : 0, "Downloading image…");
           }
         }

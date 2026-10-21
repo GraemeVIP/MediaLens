@@ -20,7 +20,7 @@ import org.json.*;
 public class MainActivity extends Activity {
   private final ExecutorService worker = Executors.newSingleThreadExecutor();
   private LinearLayout root, home, library, results, nav, linkForm, mediaTypes;
-  private TextView hero, subtitle;
+  private TextView hero, subtitle, recentDownload;
   private boolean preview;
   private ScrollView scroll;
   private EditText input;
@@ -182,6 +182,12 @@ public class MainActivity extends Activity {
     feature(types, "audio", "Audio");
     feature(types, "image", "Images");
     home.addView(types);
+    recentDownload = Ui.text(this, "", 15, false);
+    recentDownload.setTextColor(Ui.MUTED);
+    recentDownload.setPadding(0, dp(20), 0, dp(10));
+    recentDownload.setMinHeight(dp(48));
+    recentDownload.setVisibility(View.GONE);
+    home.addView(recentDownload);
   }
 
   private void feature(LinearLayout parent, String icon, String title) {
@@ -524,6 +530,16 @@ public class MainActivity extends Activity {
     if (library == null) return;
     library.removeAllViews();
     JSONArray jobs = Jobs.all(this);
+    if (recentDownload != null) {
+      JSONObject latest = jobs.optJSONObject(0);
+      boolean failed = latest != null && "failed".equals(latest.optString("status"));
+      recentDownload.setVisibility(failed ? View.VISIBLE : View.GONE);
+      if (failed) {
+        recentDownload.setText("Last download failed · View details");
+        recentDownload.setOnClickListener(
+            v -> details("Download details", latest.optString("error")));
+      }
+    }
     if (downloadTab != null)
       downloadTab.setText(jobs.length() > 0 ? "Library · " + jobs.length() : "Library");
     LinearLayout heading = Ui.row(this);
@@ -596,10 +612,7 @@ public class MainActivity extends Activity {
           label = "Saved";
           break;
         case "downloading":
-          label =
-              job.optInt("progress") > 0
-                  ? "Downloading · " + job.optInt("progress") + "%"
-                  : "Starting…";
+          label = job.optString("detail", "Connecting…");
           break;
         case "queued":
           label = "In queue";
@@ -611,11 +624,22 @@ public class MainActivity extends Activity {
           label = "Interrupted";
           break;
         default:
-          label = "Couldn’t download";
+          String failure = job.optString("error");
+          label =
+              (failure.contains("No address associated") || failure.contains("resolve host"))
+                  ? "Media host couldn’t be reached"
+                  : "Couldn’t download";
       }
       TextView status = Ui.text(this, label, 15, false);
       status.setTextColor("complete".equals(state) ? Ui.ACCENT : Ui.MUTED);
       description.addView(status);
+      String transfer = job.optString("transfer");
+      if (!transfer.isEmpty() && ("downloading".equals(state) || "complete".equals(state))) {
+        Ui.gap(description, 6);
+        TextView metrics = Ui.text(this, transfer, 15, false);
+        metrics.setTextColor(Ui.MUTED);
+        description.addView(metrics);
+      }
       row.addView(description, new LinearLayout.LayoutParams(0, -2, 1));
       if ("queued".equals(state) || "downloading".equals(state))
         row.addView(
@@ -817,6 +841,33 @@ public class MainActivity extends Activity {
     t.setTextColor(Ui.MUTED);
     t.setTextIsSelectable(true);
     body.addView(t);
+    if (text.contains("No address associated") || text.contains("resolve host")) {
+      Ui.gap(body, 20);
+      TextView check = Ui.button(this, "Check connection", true);
+      check.setOnClickListener(v -> checkConnection());
+      body.addView(check);
+    }
+  }
+
+  private void checkConnection() {
+    LinearLayout body = sheet("Connection check");
+    TextView state = Ui.text(this, "Checking the download connection…", 16, false);
+    state.setTextColor(Ui.MUTED);
+    body.addView(state);
+    worker.execute(
+        () -> {
+          String result;
+          try {
+            result = ConnectionCheck.run(this);
+          } catch (Exception e) {
+            result = Engine.friendly(e);
+          }
+          final String report = result;
+          runOnUiThread(
+              () -> {
+                if (!isDestroyed()) details("Connection check", report);
+              });
+        });
   }
 
   private void closeSheet() {
@@ -875,6 +926,11 @@ public class MainActivity extends Activity {
   }
 
   private void accept(Intent intent) {
+    if (intent == null) return;
+    if ("library".equals(intent.getStringExtra("screen"))) {
+      showPage(true);
+      return;
+    }
     if (!Intent.ACTION_SEND.equals(intent.getAction())) return;
     CharSequence value = intent.getCharSequenceExtra(Intent.EXTRA_TEXT);
     if (value == null && intent.getClipData() != null && intent.getClipData().getItemCount() > 0)
