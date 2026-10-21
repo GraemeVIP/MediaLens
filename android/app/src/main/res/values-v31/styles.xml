@@ -1,0 +1,1 @@
+<resources><style name="AppTheme" parent="BaseAppTheme"><item name="android:windowSplashScreenBackground">#0B1117</item><item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher</item><item name="android:windowSplashScreenIconBackgroundColor">#0B1117</item><item name="android:windowSplashScreenAnimationDuration">180</item></style></resources>

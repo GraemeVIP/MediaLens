@@ -3,6 +3,8 @@
 <p align="center"><strong>Save videos. Grab images. Keep the good stuff.</strong><br>Free, open-source media downloads for Brave, Chrome and Android.</p>
 <p align="center"><a href="https://github.com/GraemeVIP/MediaLens/releases">Download releases</a> · <a href="#install-the-browser-extension">Browser setup</a> · <a href="android/README.md">Android</a> · <a href="https://github.com/GraemeVIP/MediaLens/issues">Help & ideas</a></p>
 
+<p align="center"><img src="assets/android-home.png" width="280" alt="Media Lens Android home: paste a link and find media"></p>
+
 ## Your browser, with a download button
 
 Download from **YouTube, X / Twitter, Vimeo and adult platforms including Pornhub (PH), xHamster, XVideos, XNXX and RedGifs** using the power of yt-dlp. Media Lens brings videos, page images and selective batch downloads into one toolbar popup. Processing happens on your device, with no Media Lens account or hosted conversion service.

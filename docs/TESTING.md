@@ -20,3 +20,5 @@ Pornhub, xHamster, XVideos, XNXX, RedGifs, X/Twitter, YouTube and Vimeo have ded
 - Samsung Galaxy S23 Ultra (SM-S918B), Android 16/API36, 4096-byte pages: signed beta installs, direct video matches source SHA256, direct PNG downloads, and the HLS quality choice saves 320×180 video with audio through MediaStore.
 - A second Share intent updates the already-open app. Engine update from the official upstream succeeds on the phone.
 - Tests use small generated fixtures. The Android public release currently contains source, not the APK; see Android README for binary-provenance and 16 KB limitations.
+
+The Android interface uses a dark native theme, a dedicated Library, thumbnail previews, a quality bottom sheet and predictive-back handling. The phone UI was inspected after the redesign. Technical setup information is in Settings and documentation.
