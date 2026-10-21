@@ -6,6 +6,8 @@ The browser extension scans the active page only after you invoke it. Native mes
 
 The companion downloads dependencies from Python package services. Engine updates contact upstream yt-dlp/GitHub services. Android includes its own runtime and contacts GitHub only when you request an engine update.
 
+When Android cannot resolve an xHamster media CDN hostname through the system resolver, it can retry that hostname through Google Public DNS over HTTPS. This fallback is limited to subdomains of `ahcdn.com` and `xhcdn.com`. It sends the hostname only, without the page URL, cookies or media. It preserves HTTPS certificate checks and uses the phone's current network, including its VPN; it does not change global DNS or VPN settings.
+
 Desktop files are in Downloads/Media Lens and job data is in Library/Application Support/Media Lens. Android stores history privately, excludes it from Android backups and writes completed files to Downloads/Media Lens using MediaStore. Uninstalling the app removes its private history; completed downloads remain in your Downloads folder. Sharing a link to Media Lens fills the input; downloading requires your tap.
 
 Do not attach private URLs, cookies, tokens or personal downloaded media to public issues.

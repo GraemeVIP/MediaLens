@@ -12,6 +12,7 @@ import org.json.*;
 
 final class Engine {
   private static boolean ready;
+  private static File pluginDirectory;
 
   static synchronized void init(Context c) throws Exception {
     if (ready) return;
@@ -21,6 +22,16 @@ final class Engine {
               + " 16 KB compatibility fix.");
     YoutubeDL.getInstance().init(c.getApplicationContext());
     FFmpeg.getInstance().init(c.getApplicationContext());
+    pluginDirectory = new File(c.getNoBackupFilesDir(), "network-plugins");
+    File plugin = new File(pluginDirectory, "medialens/yt_dlp_plugins/extractor/medialens_dns.py");
+    if (!plugin.getParentFile().mkdirs() && !plugin.getParentFile().isDirectory())
+      throw new IOException("Cannot initialise download networking.");
+    try (InputStream in = c.getAssets().open("network/medialens_dns.py");
+        OutputStream out = new FileOutputStream(plugin)) {
+      byte[] bytes = new byte[8192];
+      int count;
+      while ((count = in.read(bytes)) != -1) out.write(bytes, 0, count);
+    }
     ready = true;
   }
 
@@ -45,9 +56,42 @@ final class Engine {
   static YoutubeDLRequest request(String url) {
     YoutubeDLRequest q = new YoutubeDLRequest(url);
     q.addOption("--no-playlist");
-    q.addOption("--socket-timeout", 30);
+    if (pluginDirectory != null) q.addOption("--plugin-dirs", pluginDirectory.getAbsolutePath());
+    q.addOption("--socket-timeout", 20);
+    q.addOption("--retries", 2);
+    q.addOption("--extractor-retries", 1);
+    q.addOption("--fragment-retries", 1);
+    q.addOption("--abort-on-unavailable-fragments");
+    q.addOption("-S", "res,proto");
     q.addOption("--no-mtime");
     return q;
+  }
+
+  static String format(String quality, boolean direct) {
+    if ("audio".equals(quality))
+      return direct
+          ? "ba[protocol=https]/b[protocol=https]/ba[protocol=http]/b[protocol=http]"
+          : "bestaudio/best";
+    String filter = "best".equals(quality) ? "" : "[height<=?" + Integer.parseInt(quality) + "]";
+    if (!direct) return "bv*" + filter + "+ba/b" + filter;
+    return "bv*[protocol=https]"
+        + filter
+        + "+ba[protocol=https]/b[protocol=https]"
+        + filter
+        + "/bv*[protocol=http]"
+        + filter
+        + "+ba[protocol=http]/b[protocol=http]"
+        + filter;
+  }
+
+  static boolean connectionFailure(Throwable error) {
+    String text = String.valueOf(error.getMessage()).toLowerCase(Locale.ROOT);
+    return text.contains("no address associated")
+        || text.contains("resolve host")
+        || text.contains("name or service not known")
+        || text.contains("temporary failure in name")
+        || text.contains("timed out")
+        || text.contains("connection reset");
   }
 
   static JSONObject info(Context c, String url) throws Exception {
@@ -74,7 +118,9 @@ final class Engine {
     String s = e.getMessage();
     if (s == null || s.isBlank()) s = e.getClass().getSimpleName();
     s = s.replaceAll("(?i)(cookie|authorization|token)=[^\\s]+", "$1=[hidden]");
-    if (s.length() > 1800) s = s.substring(s.length() - 1800);
+    LinkedHashSet<String> lines = new LinkedHashSet<>(Arrays.asList(s.split("\\R")));
+    s = String.join("\n", lines);
+    if (s.length() > 2400) s = s.substring(0, 900) + "\n…\n" + s.substring(s.length() - 1500);
     return s;
   }
 
