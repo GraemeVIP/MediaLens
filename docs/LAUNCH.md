@@ -1,11 +1,11 @@
-# Launch copy
+# Media Lens is live
 
-## GitHub and social announcement
+Free, open-source video and image downloads for Brave and Chrome, with native Android app source included.
 
-Media Lens is a free, open-source local video and image downloader for people who want a focused way to save media from the pages they are viewing.
+Save from YouTube, X / Twitter, Vimeo and adult sites including Pornhub, xHamster, XVideos, XNXX and RedGifs. Pick video quality or audio, tick several clips on a channel page, or select a batch of full-size images. Three desktop video downloads can run together. No account or hosted conversion service.
 
-The Brave/Chrome macOS extension uses a local download companion, with selective channel batch videos and page image selection in the toolbar popup. Site support is yt-dlp-powered and varies by page, with support covering sources including Pornhub, xHamster, XVideos, XNXX, RedGifs, X, YouTube and Vimeo.
+The browser extension is available from GitHub Releases for macOS. Android runs yt-dlp and FFmpeg on the phone, accepts paste/share links, and has been tested on a Galaxy S23 Ultra. Android source and build instructions are in the repository.
 
-An Android standalone app for paste/share link downloads is in beta; APK availability will be announced separately when published.
+[Get Media Lens](https://github.com/GraemeVIP/MediaLens) · [Releases](https://github.com/GraemeVIP/MediaLens/releases) · [Report an issue](https://github.com/GraemeVIP/MediaLens/issues)
 
-Get Media Lens on GitHub: https://github.com/GraemeVIP/MediaLens
+Powered by yt-dlp; site availability varies by page. Stars, specific bug reports and contributions welcome.

@@ -18,7 +18,7 @@ The app is available as source for local builds. A signed private beta has been 
 
 The FFmpeg dependency has a [known upstream 16 KB-page issue](https://github.com/yausername/youtubedl-android/issues/365). Video operations detect affected devices and report the limitation instead of starting the incompatible runtime. This beta is not a Google Play release. Site support follows yt-dlp; login/age-gated, private and DRM content may be unavailable. Android does not import your desktop browser's cookies.
 
-Use **Update download engine** before trying sites that have changed since the bundled engine was built. Updates come directly from the official yt-dlp stable release.
+Use **Settings → Update engine** before trying sites that have changed since the bundled engine was built. Updates come directly from the official yt-dlp stable release.
 
 ## Build
 
